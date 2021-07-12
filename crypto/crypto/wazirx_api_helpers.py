@@ -7,12 +7,8 @@ import requests
 
 
 def get_current_balance(coin_balance):
-    # sending get request and saving the response as response object
     r = requests.get(url="https://api.wazirx.com/api/v2/tickers", params=None)
-
-    # extracting data in json format
     data = r.json()
-
     result = {}
     for key, value in coin_balance.items():
         if key.lower()+"inr" in data:
@@ -28,12 +24,10 @@ def get_current_balance(coin_balance):
 
 
 def get_price_at_time(market, time):
-    # [ timestamp,opening, highest, lowest, closing]
-    # time = "2021-07-09 19:57:00"
-    # timestamp = datetime.now().strftime("%s")
-    ist = pytz.timezone('Asia/Kolkata')
-    timestamp = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone('UTC')).astimezone(ist).replace(second=00).strftime("%s")
+    # [timestamp,opening, highest, lowest, closing]
     # url = https://x.wazirx.com/api/v2/k?market=btcinr&period=1&limit=1&timestamp=1625504419
+    # time_format = "2021-07-09 19:57:00"
+    timestamp = time.replace(second=00).strftime("%s")
     params = {"market": market.lower(), "period": 1, "timestamp": timestamp}
     r = requests.get(url="https://x.wazirx.com/api/v2/k", params=params)
     data = r.json()

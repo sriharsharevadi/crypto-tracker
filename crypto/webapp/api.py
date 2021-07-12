@@ -1,11 +1,14 @@
+import datetime
+
 from django.db.models import Case, When, Value, FloatField, F
 from rest_framework import status, viewsets, permissions, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from excel_helpers import price_in_inr, get_list_from_excel
+from .helpers import create_trade_helper
 from .models import *
 from .serializers import *
-# Create your views here.
 
 
 class CoinViewSet(viewsets.ModelViewSet):
@@ -20,28 +23,35 @@ class UserCoinViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
+class TradeViewSet(viewsets.ModelViewSet):
+    queryset = Trade.objects.all()
+    serializer_class = TradeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def create(self, request):
-        serializer = TransactionSerializer(data=request.data)
-        serializer.is_valid()
-        transaction = serializer.save()
-        sell_coin = UserCoin.objects.filter(coin=transaction.sell_coin, user=transaction.user).first()
-        buy_coin = UserCoin.objects.filter(coin=transaction.buy_coin, user=transaction.user).first()
-        if not sell_coin:
-            sell_coin = UserCoin.objects.create(coin=transaction.sell_coin, user=transaction.user, avg_buying_price=0, balance=0)
-        if not buy_coin:
-            buy_coin = UserCoin.objects.create(coin=transaction.buy_coin, user=transaction.user, avg_buying_price=0, balance=0)
-        buy_coin.avg_buying_price = (buy_coin.avg_buying_price * buy_coin.balance + transaction.value_per_coin_inr*transaction.buy_amount)/(buy_coin.balance+transaction.buy_amount)
-        buy_coin.balance = buy_coin.balance + transaction.buy_amount
-        sell_coin.balance = sell_coin.balance - transaction.sell_amount
-        buy_coin.save()
-        sell_coin.save()
+    @action(detail=False, methods=["get"])
+    def custom(self, request):
+        # orders = {'time': datetime.datetime(2021, 5, 30, 13, 3, 1), 'market': 'WAVESUSDT', 'price': 13.0549, 'volume': 1, 'total': 13.0549, 'trade': 'Buy', 'fee_currency': 'USDT', 'fee': 0.0261098, 'user': 1}
+        orders = get_list_from_excel('harsha.xlsx', 'Exchange Trades')
+        data = price_in_inr(orders)
+        return create_trade_helper(data)
 
-        return Response(serializer.data)
+
+        # serializer = TransactionSerializer(data=request.data)
+        # serializer.is_valid()
+        # transaction = serializer.save()
+        # sell_coin = UserCoin.objects.filter(coin=transaction.sell_coin, user=transaction.user).first()
+        # buy_coin = UserCoin.objects.filter(coin=transaction.buy_coin, user=transaction.user).first()
+        # if not sell_coin:
+        #     sell_coin = UserCoin.objects.create(coin=transaction.sell_coin, user=transaction.user, avg_buying_price=0, balance=0)
+        # if not buy_coin:
+        #     buy_coin = UserCoin.objects.create(coin=transaction.buy_coin, user=transaction.user, avg_buying_price=0, balance=0)
+        # buy_coin.avg_buying_price = (buy_coin.avg_buying_price * buy_coin.balance + transaction.value_per_coin_inr*transaction.buy_amount)/(buy_coin.balance+transaction.buy_amount)
+        # buy_coin.balance = buy_coin.balance + transaction.buy_amount
+        # sell_coin.balance = sell_coin.balance - transaction.sell_amount
+        # buy_coin.save()
+        # sell_coin.save()
+        #
+        # return Response(serializer.data)
 
 
 class P2PViewSet(viewsets.ModelViewSet):

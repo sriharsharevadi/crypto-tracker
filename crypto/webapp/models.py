@@ -32,19 +32,19 @@ class UserCoin(TimeStampModel):
         return self.user.username + "_" + self.coin.name
 
 
-class Transaction(TimeStampModel):
-    buy_coin = models.ForeignKey(Coin, related_name="buy_coin", on_delete=models.PROTECT)
-    sell_coin = models.ForeignKey(Coin, related_name="sell_coin", on_delete=models.PROTECT)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    buy_amount = models.FloatField()
-    sell_amount = models.FloatField()
-    value_per_coin_inr = models.FloatField()
-    network_fee = models.FloatField()
-    time = models.DateTimeField()
-    loss_or_gain = models.FloatField(null=True, blank=True)
-
-    def __str__(self):
-        return self.user.username + " " + self.buy_coin.name + "/" + self.sell_coin.name
+# class Transaction(TimeStampModel):
+#     buy_coin = models.ForeignKey(Coin, related_name="buy_coin", on_delete=models.PROTECT)
+#     sell_coin = models.ForeignKey(Coin, related_name="sell_coin", on_delete=models.PROTECT)
+#     user = models.ForeignKey(User, on_delete=models.PROTECT)
+#     buy_amount = models.FloatField()
+#     sell_amount = models.FloatField()
+#     value_per_coin_inr = models.FloatField()
+#     network_fee = models.FloatField()
+#     time = models.DateTimeField()
+#     loss_or_gain = models.FloatField(null=True, blank=True)
+#
+#     def __str__(self):
+#         return self.user.username + " " + self.buy_coin.name + "/" + self.sell_coin.name
 
 
 class P2P(TimeStampModel):
@@ -70,3 +70,38 @@ class P2P(TimeStampModel):
 
     def __str__(self):
         return self.user.username + "_" + self.coin.name
+
+
+class Trade(TimeStampModel):
+    TRADE_CHOICES = [
+        ('b', 'BUY'),
+        ('s', 'SELL'),
+    ]
+    market = models.CharField(max_length=20)
+    buy_coin = models.ForeignKey(Coin, related_name="buy_coin", on_delete=models.PROTECT)
+    sell_coin = models.ForeignKey(Coin, related_name="sell_coin", on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    volume = models.FloatField()
+    price = models.FloatField()
+    price_in_inr = models.FloatField()
+    total = models.FloatField()
+    fee_coin = models.ForeignKey(Coin, related_name="fee_coin", on_delete=models.PROTECT)
+    fee = models.FloatField()
+    fee_in_inr = models.FloatField()
+    time = models.DateTimeField()
+    loss_or_gain = models.FloatField(null=True, blank=True)
+
+    def clean(self):
+        if self.market:
+            if self.market.endswith('USDT'):
+                coin, created = Coin.objects.get_or_create(name=self.market.replace("USDT", ""))
+                self.buy_coin_id = coin.pk
+            if self.market.endswith('USDT'):
+                coin, created = Coin.objects.get_or_create(name="USDT")
+                self.sell_coin_id = coin.pk
+        if self.fee_currency:
+            coin, created = Coin.objects.get_or_create(name=self.fee_coin)
+            self.fee_coin_id = coin.pk
+
+    def __str__(self):
+        return self.user.username + " " + self.buy_coin.name + "/" + self.sell_coin.name
