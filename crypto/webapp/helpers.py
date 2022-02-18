@@ -55,8 +55,6 @@ def create_trade_helper(data):
                 sell_coin.balance = sell_coin.balance - trade.total
         else:
             print("shiiit")
-
-
         buy_coin.save()
         sell_coin.save()
         trade.save()
@@ -69,4 +67,5 @@ def create_trade_helper(data):
         # if buy_coin.coin.name in ["INR", "USDT", "WRX", "BTC"] and sell_coin.coin.name not in ["INR", "USDT", "WRX", "BTC"]:
         #     trade.loss_or_gain = round(100*(trade.price_in_inr - sell_coin.avg_buying_price)/sell_coin.avg_buying_price,2)
         #     trade.save()
-    return Response(serializer.data)
+    # return Response(serializer.data)
+    return True

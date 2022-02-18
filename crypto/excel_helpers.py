@@ -9,7 +9,7 @@ from crypto.wazirx_api_helpers import get_current_balance, get_price_at_time
 from webapp.models import Coin
 
 
-def get_list_from_excel(path, sheet_name):
+def get_list_from_excel(path, sheet_name, user_id):
     ist = pytz.timezone('Asia/Kolkata')
 
     results = []
@@ -26,7 +26,7 @@ def get_list_from_excel(path, sheet_name):
         temp["type"] = row[5].value
         temp["fee_currency"] = row[6].value
         temp["fee"] = row[7].value
-        temp["user"] = 1
+        temp["user"] = user_id
         results.append(temp)
 
     return results
@@ -108,12 +108,19 @@ def add_coin_pk(trade):
 
 
 def price_in_inr(orders):
-    pool = Pool(processes=len(orders))
-    orders = pool.map(process_order, orders)
-    results = pool.map(get_network_fee, orders)
-    pool.close()
-    pool.join()
-    results = list(map(add_coin_pk, results))
+    # pool = Pool(processes=len(orders))
+    # orders = pool.map(process_order, orders)
+    # results = pool.map(get_network_fee, orders)
+    # pool.close()
+    # pool.join()
+    a = []
+    for order in orders:
+        temp = process_order(order)
+        temp = get_network_fee(temp)
+        a.append(temp)
+    # orders = process_order(orders)
+    # results = get_network_fee(orders)
+    results = list(map(add_coin_pk, a))
 
 
     # orders = process_order(orders)

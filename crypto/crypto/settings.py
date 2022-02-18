@@ -94,10 +94,12 @@ DATABASES = {
         'NAME': 'crypto_tracker',
 
         'USER': 'crypto_tracker',
+        # 'USER': 'harsha',
 
         'PASSWORD': 'crypto_tracker',
-        #'PASSWORD': '6xp3chvsu40L0N6b'
+        # 'PASSWORD': '6xp3chvsu40L0N6b',
 
+        # 'HOST': 'harsha.chf3ksvorhxb.ap-south-1.rds.amazonaws.com',
         'HOST': 'localhost',
 
         'PORT': '5432',
@@ -146,6 +148,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = 'deployment-static'
+
+MEDIA_ROOT = 'media'
+
+MEDIA_URL = '/media/'
 
 
 # Default primary key field type

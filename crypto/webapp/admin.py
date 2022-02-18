@@ -14,3 +14,4 @@ class UserCoinAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Trade, TradeAdmin)
 admin.site.register(models.UserCoin, UserCoinAdmin)
+admin.site.register(models.File)

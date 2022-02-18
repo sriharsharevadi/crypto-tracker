@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 
 from django.contrib.auth.models import User
 from django.db.models import Choices
@@ -105,3 +105,23 @@ class Trade(TimeStampModel):
 
     def __str__(self):
         return self.user.username + " " + self.buy_coin.name + "/" + self.sell_coin.name
+
+
+class File(TimeStampModel):
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    file = models.FileField(upload_to='trades/', validators=[FileExtensionValidator(['csv', 'xlsx', 'xls'])])
+    uploaded = models.BooleanField(default=False)
+
+    @classmethod
+    def post_save(cls, sender, instance, created, *args, **kwargs):
+        from excel_helpers import get_list_from_excel, price_in_inr
+        from webapp.helpers import create_trade_helper
+        orders = get_list_from_excel('harsha.xlsx', 'Exchange Trades', instance.user_id)
+        data = price_in_inr(orders)
+        a = create_trade_helper(data)
+        if a:
+            instance.uploaded = True
+            instance.save()
+
+
+models.signals.post_save.connect(File.post_save, sender=File)
